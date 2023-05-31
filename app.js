@@ -5,6 +5,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
+//setup Crosss region 
+app.use(require("cors")());
+
 //bring the routes
 app.use("/user", require("./routes/user"));
 app.use("/chatroom", require("./routes/chatroom"));
