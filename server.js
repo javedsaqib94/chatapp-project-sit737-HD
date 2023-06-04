@@ -33,6 +33,9 @@ const server = app.listen(8000, ()=> {
 
 const io = require('socket.io')(server);
 const jwt= require('jwt-then');
+
+const Message = mongoose.model("Message");
+const User = mongoose.model("User");
 io.use(async (socket,next) => {
     try {       
         const token = socket.handshake.query.token; 
@@ -50,5 +53,31 @@ io.on('connection', (socket) =>{
     
     socket.on("disconnec" , () =>{
         console.log("Disconnected" + socket.userId);
+    });
+
+
+    socker.on("joinRoom", ({chatroomId}) =>{
+        socket.join(chatroomId);
+        console.log("A user joined Chatroom:" + chatroomId);
+    });
+
+    socker.on("leaveRoom", ({chatroomId}) =>{
+        socket.leave(chatroomId);
+        console.log("A user left Chatroom:" + chatroomId);
+    });
+
+    socker.on("chatroomMessage", async ({chatroomId, message}) =>{
+        if(message.trim().length > 0 ){
+            const user = await User.findOne({_id: socket,userId});  
+            const message = new Message({chatroom: chatroomId, user: socket.userId, message, })
+            
+            io.to(chatroomId).emit("newMessage", {
+                message,
+                name: user.name,
+                userId:socket.userId,
+            }); 
+
+        await message.save();
+        }
     });
 });
